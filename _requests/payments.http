@@ -1,0 +1,8 @@
+### Initiate Payment
+POST {{url}}/payment/initiate
+Content-Type: application/json
+
+{
+  "channel": "card",
+  "amount": 5000
+}
