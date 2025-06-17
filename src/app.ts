@@ -6,8 +6,9 @@ import express, {Application, Request, Response, NextFunction} from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import paymentRoutes from "./payment/payment.route";
+import paymentRoutes from "./payment/payment.route"
 import {LoggerUtils} from "./_lib/logger.utils";
+import authRoutes from './auth/auth.route';
 
 
 const appBootstrap = async () => {
@@ -25,6 +26,7 @@ const appBootstrap = async () => {
 
     //Our Application Routes Goes Here
     app.use('/api/v1/payment', paymentRoutes);
+    app.use('/api/v1/user', authRoutes)
 
 
     app.listen(PORT, () => {

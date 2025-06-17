@@ -17,10 +17,10 @@ export class authController {
   constructor() {
     this.Authservice = new authService();
   }
-    Register = (req: Request<{}, {}, RegisterDto>, res: Response) => {
+    Register =  async (req: Request<{}, {}, RegisterDto>, res: Response): Promise<any> => {
         const{email,password, phoneNumber}= req.body
     try {
-      const result = this.Authservice.RegisterService(req.body);
+      const result =   await  this.Authservice.RegisterService(req.body);
       res.status(200).json(result);
     } catch (err) {
         LoggerUtils.error(err);

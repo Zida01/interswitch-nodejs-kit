@@ -26,7 +26,7 @@ export class authService {
     async RegisterService(reqBody: RegisterDto): Promise<IResponse<LoginDto | null>> {
         const { email, phoneNumber, password } = reqBody;
     try {
-      const createdUser = await AuthPrismaClient.user.create({
+      const createdUser = await AuthPrismaClient.create({
         data: {
           email,
           phoneNumber,
