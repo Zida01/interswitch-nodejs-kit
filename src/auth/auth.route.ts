@@ -6,6 +6,7 @@ const authRoutes = Router();
 const controller = new authController();
 
 authRoutes.post("/register", controller.Register);
+authRoutes.post("/login", controller.Login)
 
 authRoutes.get("/r", () => {
     console.log("welcome")
