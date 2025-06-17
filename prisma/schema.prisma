@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -24,6 +24,7 @@ model User {
 
   email    String @unique
   password String
+  phoneNumber String
 
   //
   wallet_balance Decimal @default("0.0") @db.Decimal(10, 2)
