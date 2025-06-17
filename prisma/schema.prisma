@@ -7,18 +7,52 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id       Int     @id @default(autoincrement())
-  name     String?
+enum Role {
+  CUSTOMER
+  MERCHANT
+}
 
-  email    String  @unique
+enum PaymentStatus {
+  pending
+  paid
+  failed
+}
+
+model User {
+  id   Int     @id @default(autoincrement())
+  name String?
+
+  email    String @unique
   password String
 
   //
-  wallet_balace Decimal @default("0.0")
+  wallet_balance Decimal @default("0.0") @db.Decimal(10, 2)
+
+  role Role @default(CUSTOMER)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("users")
+}
+
+//wallet histories
+
+//invoices
+model Invoice {
+  id        Int    @id @default(autoincrement())
+  reference String @unique
+  email     String
+
+  channel String
+  amount  Decimal @default("0.0")
+
+  payment_status PaymentStatus @default(pending)
+
+  gateway_reference String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("invoices")
 }

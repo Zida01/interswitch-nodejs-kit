@@ -4,5 +4,6 @@ Content-Type: application/json
 
 {
   "channel": "card",
-  "amount": 5000
+  "amount": 5000,
+  "email": "test@gmail.com"
 }
