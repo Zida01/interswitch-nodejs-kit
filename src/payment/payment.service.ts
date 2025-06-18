@@ -3,6 +3,8 @@ import {IResponse, ResponseUtils} from "../_lib/response.utils";
 import {LoggerUtils} from "../_lib/logger.utils";
 import {InterSwitchCardService} from "../_lib/interswitch/services/interswitch-card.service";
 import {GeneralUtils} from "../_lib/general.utils";
+import prisma from "../_lib/db/prisma";
+import {IPaymentInitializeResp} from "./payment.type";
 
 export class PaymentService {
     protected interSwitchCardService: InterSwitchCardService
@@ -16,11 +18,11 @@ export class PaymentService {
      * @description Initialize payment service
      * @param reqBody
      */
-    initiatePaymentService = async (reqBody: InitiatePaymentDto): Promise<IResponse<InitiatePaymentDto | null>> => {
+    initiatePaymentService = async (reqBody: InitiatePaymentDto): Promise<IResponse<IPaymentInitializeResp | null>> => {
         try {
             const reference = GeneralUtils.generateReference();
 
-            await this.interSwitchCardService.initializeService({
+            const initializeResp = await this.interSwitchCardService.initializeService({
                 email: reqBody.email,
                 amount: reqBody.amount,
                 reference,
@@ -31,11 +33,68 @@ export class PaymentService {
                 expireYear: reqBody.expireYear,
             })
 
-            return ResponseUtils.handleResponse(true, "Payment generated successfully", reqBody);
+
+
+            await prisma.invoice.create({
+                data: {
+                    reference,
+                    email: reqBody.email,
+                    channel: 'card',
+                    amount: reqBody.amount,
+                    payment_status : initializeResp.status? 'pending': 'failed',
+                    gateway_reference: initializeResp.data?.gateway_reference
+                }
+            })
+
+            if (initializeResp.status && initializeResp.data) {
+
+                await prisma.invoiceLog.create({
+                    data: {
+                        reference,
+                        req_payload: JSON.stringify(initializeResp.data.reqBody),
+                        resp_payload: JSON.stringify(initializeResp.data.respData),
+                        is_successful: true,
+                        action_type: 'initiate',
+                    }
+                })
+
+                return ResponseUtils.handleResponse(true, "Payment generated successfully", {
+                    reference,
+                    message: initializeResp.data?.message as string,
+                    next_action: initializeResp.data?.next_action as string,
+                });
+            }
+
+            await prisma.invoiceLog.create({
+                data: {
+                    reference,
+                    req_payload: JSON.stringify(initializeResp.data?.reqBody??null),
+                    resp_payload: JSON.stringify(initializeResp.data?.respData??null),
+                    is_successful: false,
+                    action_type: 'initiate',
+                }
+            })
+            return ResponseUtils.handleResponse(false, initializeResp.message, null);
+
 
         } catch (err) {
             LoggerUtils.error(err)
             return ResponseUtils.handleResponse(false, "Failed to process request", null);
         }
     }
+
+    // verifyOtpService = async (reqBody: InitiatePaymentDto): Promise<IResponse<IPaymentInitializeResp | null>> => {
+    //     try {
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //     } catch (err) {
+    //         LoggerUtils.error(err)
+    //         return ResponseUtils.handleResponse(false, "Failed to process request", null);
+    //     }
+    // }
 }

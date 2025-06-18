@@ -18,13 +18,13 @@ export class PaymentController {
      * @param req
      * @param res
      */
-    initiatePayment = (req: Request<{},{},InitiatePaymentDto>, res: Response) => {
+    initiatePayment = async (req: Request<{}, {}, InitiatePaymentDto>, res: Response) => {
         try {
-            const result = this.paymentService.initiatePaymentService(req.body);
-            res.status(200).json(result);
+            const result = await this.paymentService.initiatePaymentService(req.body);
+
+            res.status(result.status?200:400).json(result);
         } catch (err) {
-            LoggerUtils.error(err)
-            res.status(400).json(ResponseUtils.handleResponse(false,"Unable to process request",null));
+            res.status(400).json({ message: "Unable to process request" });
         }
     };
 }

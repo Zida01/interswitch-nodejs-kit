@@ -4,6 +4,11 @@ Content-Type: application/json
 
 {
   "channel": "card",
-  "amount": 5000,
-  "email": "test@gmail.com"
+  "amount": "5000",
+  "email": "test@gmail.com",
+  "pan": "6280511000000095",
+  "pin": "1111",
+  "cvv2": "111",
+  "expireMonth": "04",
+  "expireYear": "50"
 }
