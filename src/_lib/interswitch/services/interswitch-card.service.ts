@@ -1,8 +1,12 @@
 import {LoggerUtils} from "../../logger.utils";
 import axios from "axios";
 import * as path from 'path';
-import {ICardMakePaymentResp} from "../interswitch.interface";
-import {IPaymentInitializeData} from "../../../payment/payment.interface";
+import {ICardMakePaymentResp, InitializeCardPaymentReq} from "../interswitch.interface";
+import {IResponse, ResponseUtils} from "../../response.utils";
+import {
+    IPaymentInitializeData,
+    IPaymentInitializeServiceResp
+} from "../../../payment/payment.type";
 
 const generateAuthData = require(
     path.resolve(__dirname, '../../../../authData.js'),
@@ -21,7 +25,7 @@ export class InterSwitchCardService {
         this.clientSecret = process.env.ISW_CLIENT_SECRET as string
     }
 
-    generateTokenService = async () => {
+    generateTokenService = async ():Promise<string> => {
         try {
             const myString = `${this.clientId}:${this.clientSecret}`;
             const token = btoa(myString);
@@ -47,22 +51,28 @@ export class InterSwitchCardService {
     };
 
 
+
     /**
      * @description Make a purchase request
      * @param paymentData
      */
-    initializeService = async (paymentData:IPaymentInitializeData) => {
+    initializeService = async (paymentData: IPaymentInitializeData): Promise<IResponse<IPaymentInitializeServiceResp<InitializeCardPaymentReq,ICardMakePaymentResp>|null>> => {
         try {
             const token = await this.generateTokenService()
 
-            const authData = generateAuthData(
-                paymentData.pan,
-                paymentData.pin,
-                `${paymentData.expireYear}${paymentData.expireMonth}`,
-                paymentData.cvv2,
-                process.env.PUBLIC_KEY_MODULUS,
-                process.env.PUBLIC_KEY_EXPONENT
-            )
+            if(!token){
+                return ResponseUtils.handleResponse(false, "Failed to process request", null);
+            }
+
+            const authData = {
+                card: paymentData.pan,
+                pin: paymentData.pin,
+                expireDate: `${paymentData.expireYear}${paymentData.expireMonth}`,
+                cvv2: paymentData.cvv2,
+                publicKeyModulus: process.env.PUBLIC_KEY_MODULUS, //
+                publicKeyExponent: process.env.PUBLIC_KEY_EXPONENT
+            }
+            const encryptedAuthData = generateAuthData(authData)
 
             const header = {
                 Authorization: `Bearer ${token}`,
@@ -72,21 +82,72 @@ export class InterSwitchCardService {
 
             const reqData = {
                 customerId: paymentData.email,
-                amount:paymentData.amount,
+                amount: paymentData.amount,
                 currency: 'NGN',
-                authData,
+                authData:encryptedAuthData,
                 transactionRef: paymentData.reference,
             }
 
-            const response = await axios.post(this.baseUrl, reqData, {headers: header})
+            const response = await axios.post(this.baseUrl, reqData, {headers:header})
 
-            if(response.status===200){
-                const respData:ICardMakePaymentResp = response.data
+            if (response.status >= 200 && response.status<300) {
+
+                const respData: ICardMakePaymentResp = response.data
+
+                const data :IPaymentInitializeServiceResp<InitializeCardPaymentReq,ICardMakePaymentResp> = {
+                    reference: paymentData.reference,
+                    gateway_reference: respData.paymentId,
+                    message: respData.plainTextSupportMessage ?? respData.message,
+                    next_action: respData.responseCode === '00' ? 'confirm_status' : 'otp',
+                    reqBody: reqData,
+                    respData: respData
+                }
+
+                return ResponseUtils.handleResponse(true, "Payment generated successfully", data);
             }
 
-        } catch (e:any) {
-            console.log(e.response.data)
-            // LoggerUtils.error(e)
+
+
+        } catch (e: any) {
+            LoggerUtils.error(e.response.data.errors)
+            return ResponseUtils.handleResponse(false, e.response.data.errors, null);
+        }
+        return ResponseUtils.handleResponse(false, "Failed to process request", null);
+    }
+
+    /**
+     *
+     */
+    otpVerification = async (reference:string,paymentId:string,otp:string) => {
+        try{
+            const url = `${this.baseUrl}/otps/auths`
+            const postData = {
+                paymentId,
+                otp,
+                transactionId:reference,
+                // eciFlag :''
+            }
+            const token = await this.generateTokenService()
+
+            if(!token){
+
+            }
+
+            const header = {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                Accept: 'application/json'
+            }
+
+            const response = await  axios.post(url,postData,{headers:header})
+
+            if (response.status >= 200 && response.status<300) {
+                console.log(response.data)
+            }
+
+        }
+        catch (e) {
+            LoggerUtils.error(e)
         }
     }
 }

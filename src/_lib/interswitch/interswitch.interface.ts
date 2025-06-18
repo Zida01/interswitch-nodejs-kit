@@ -4,6 +4,14 @@ export interface ICardMakePaymentResp{
     bankCode: string
     message: string
     amount: string
-    responseCode:string //TO
+    responseCode:string //00, TO, SO,
     plainTextSupportMessage: string
+}
+
+export interface InitializeCardPaymentReq{
+    customerId: string
+    amount: string
+    currency: string
+    authData:string
+    transactionRef: string
 }

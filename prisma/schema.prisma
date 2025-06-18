@@ -22,8 +22,8 @@ model User {
   id   Int     @id @default(autoincrement())
   name String?
 
-  email    String @unique
-  password String
+  email       String @unique
+  password    String
   phoneNumber String
 
   //
@@ -37,23 +37,43 @@ model User {
   @@map("users")
 }
 
-//wallet histories
+// wallet histories
 
-//invoices
+// invoices
 model Invoice {
   id        Int    @id @default(autoincrement())
   reference String @unique
   email     String
 
   channel String
-  amount  Decimal @default("0.0")
+  amount  Decimal @default("0.00") @db.Decimal(10, 2)
 
   payment_status PaymentStatus @default(pending)
 
   gateway_reference String?
 
+  InvoiceLog InvoiceLog[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("invoices")
+}
+
+model InvoiceLog {
+  id Int @id @default(autoincrement())
+
+  reference String?
+
+  action_type String
+
+  req_payload  Json?
+  resp_payload Json?
+
+  is_successful Boolean @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  invoice Invoice? @relation(fields: [reference], references: [reference])
 }

@@ -2,7 +2,8 @@
 const forge = require('node-forge');
 //
 //prettier-ignore
-const generateAuthData = function (card, pin, expireDate, cvv2, publicKeyModulus, publicKeyExponent) {
+const generateAuthData = function (options) {
+    const {card, pin, expireDate, cvv2, publicKeyModulus, publicKeyExponent} = options;
     var authString = '1Z' + card + 'Z' + pin + 'Z' + expireDate + 'Z' + cvv2;
     var vv = toHex(authString);
     //var vv = SecureManager.toHex(options.authData);
