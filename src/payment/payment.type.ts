@@ -1,6 +1,12 @@
 
+//expected Response to Payment Controller
+export interface IPaymentInitializeResp{
+    message:string;
+    next_action : string
+    reference:string
+}
 
-
+//
 export interface IPaymentInitializeData {
     email:string
     amount:string
@@ -13,7 +19,7 @@ export interface IPaymentInitializeData {
 }
 
 
-//expected Response From Different Payment Service
+//expected Response From Different Payment Service for Initialize Req
 export interface IPaymentInitializeServiceResp<Req,Resp>{
     reqBody: Req,
     respData:Resp
@@ -24,9 +30,12 @@ export interface IPaymentInitializeServiceResp<Req,Resp>{
 }
 
 
-//expected Response to Payment Controller
-export interface IPaymentInitializeResp{
+//expected Response From Different PaymentAuthenticateOtp Service
+export interface IPaymentServiceResp<Req,Resp>{
+    reqBody: Req,
+    respData:Resp
     message:string;
     next_action : string
     reference:string
+    gateway_reference:string
 }

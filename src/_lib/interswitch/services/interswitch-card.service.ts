@@ -1,11 +1,16 @@
 import {LoggerUtils} from "../../logger.utils";
 import axios from "axios";
 import * as path from 'path';
-import {ICardMakePaymentResp, InitializeCardPaymentReq} from "../interswitch.interface";
+import {
+    IAuthenticateOtpReq,
+    IAuthenticateOtpResp,
+    ICardMakePaymentResp,
+    InitializeCardPaymentReq
+} from "../interswitch.interface";
 import {IResponse, ResponseUtils} from "../../response.utils";
 import {
     IPaymentInitializeData,
-    IPaymentInitializeServiceResp
+    IPaymentInitializeServiceResp, IPaymentServiceResp
 } from "../../../payment/payment.type";
 
 const generateAuthData = require(
@@ -19,10 +24,12 @@ export class InterSwitchCardService {
     private confirm_status_url = 'https://qa.interswitchng.com/collections/api/v1/gettransaction';
     private readonly clientId: string = ''
     private readonly clientSecret: string = ''
+    private readonly merchantCode: string = ''
 
     constructor() {
         this.clientId = process.env.ISW_CLIENT_ID as string
         this.clientSecret = process.env.ISW_CLIENT_SECRET as string
+        this.merchantCode = process.env.ISW_MERCHANT_CODE as string
     }
 
     generateTokenService = async ():Promise<string> => {
@@ -105,9 +112,6 @@ export class InterSwitchCardService {
 
                 return ResponseUtils.handleResponse(true, "Payment generated successfully", data);
             }
-
-
-
         } catch (e: any) {
             LoggerUtils.error(e.response.data.errors)
             return ResponseUtils.handleResponse(false, e.response.data.errors, null);
@@ -116,9 +120,9 @@ export class InterSwitchCardService {
     }
 
     /**
-     *
+     * @description Handle authentication requirements(T0,S0)
      */
-    otpVerification = async (reference:string,paymentId:string,otp:string) => {
+    otpVerification = async (reference:string,paymentId:string,otp:string):Promise<IResponse<IPaymentServiceResp<IAuthenticateOtpReq,IAuthenticateOtpResp>|null>> => {
         try{
             const url = `${this.baseUrl}/otps/auths`
             const postData = {
@@ -130,7 +134,7 @@ export class InterSwitchCardService {
             const token = await this.generateTokenService()
 
             if(!token){
-
+                ResponseUtils.handleResponse(false, "Failed to process request", null);
             }
 
             const header = {
@@ -142,9 +146,46 @@ export class InterSwitchCardService {
             const response = await  axios.post(url,postData,{headers:header})
 
             if (response.status >= 200 && response.status<300) {
-                console.log(response.data)
+                const verifyRespData:IAuthenticateOtpResp = response.data
+
+                const respData : IPaymentServiceResp<any, IAuthenticateOtpResp> = {
+                    reqBody: postData,
+                    respData: verifyRespData,
+                    message: verifyRespData.message,
+                    next_action: "confirm_transaction",
+                    reference,
+                    gateway_reference:paymentId
+                }
+
+                return ResponseUtils.handleResponse(true, "OTP verified successfully",respData );
             }
 
+        }
+        catch (e:any) {
+            LoggerUtils.error(e.response.data.errors)
+        }
+        return ResponseUtils.handleResponse(false, "Failed to process request", null);
+    }
+
+    /**
+     * @description Confirm the status of the transaction
+     * @param reference
+     * @param amount
+     */
+    confirmTransactionStatus = async (reference:string,amount:string) => {
+        try{
+            const token = await this.generateTokenService()
+            if(!token){
+                return ResponseUtils.handleResponse(false, "Failed to process request", null);
+            }
+
+            const url = `${this.confirm_status_url}?merchantcode=${this.merchantCode}&transactionReference=${reference}&amount=${amount}`
+            const headers = {
+                Accept: 'application/json',
+                'Content-type':'application/json',
+                Authorization : `Bearer ${token}`
+            }
+            const verifyTransResp = await axios.get(url,{headers})
         }
         catch (e) {
             LoggerUtils.error(e)
@@ -152,9 +193,4 @@ export class InterSwitchCardService {
     }
 }
 
-
-//generate token
-//1- Make a purchase request
-//2- Handle authentication requirements(T0,S0)
-//3- Confirm the status of the transaction
 //Resend OTP

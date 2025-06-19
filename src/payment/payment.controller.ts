@@ -3,6 +3,7 @@ import {PaymentService} from "./payment.service";
 import {InitiatePaymentDto} from "./dto/initiate-payment.dto";
 import {ResponseUtils} from "../_lib/response.utils";
 import {LoggerUtils} from "../_lib/logger.utils";
+import {AuthenticateOtpDto} from "./dto/authenticate-otp.dto";
 
 
 export class PaymentController {
@@ -27,4 +28,15 @@ export class PaymentController {
             res.status(400).json({ message: "Unable to process request" });
         }
     };
+
+    otpAuthentication = async (req:Request<{},{},AuthenticateOtpDto>,res:Response) => {
+        try{
+            const resp = await this.paymentService.authenticateOtpService(req.body);
+            res.status(resp.status?200:400).json(resp);
+        }
+        catch (e) {
+            LoggerUtils.error(e)
+            res.status(400).json({ message: "Unable to process request" });
+        }
+    }
 }

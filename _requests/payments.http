@@ -12,3 +12,12 @@ Content-Type: application/json
   "expireMonth": "04",
   "expireYear": "50"
 }
+
+### Authenticate OTP
+POST {{url}}/payment/verify-otp
+Content-Type: application/json
+
+{
+  "reference": "250619120WOIKYMJBCA",
+  "otp": "123456"
+}
