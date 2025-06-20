@@ -39,4 +39,15 @@ export class PaymentController {
             res.status(400).json({ message: "Unable to process request" });
         }
     }
+
+    verifyTransaction = async (req:Request<{reference:string},{},AuthenticateOtpDto>,res:Response) => {
+        try{
+            const resp = await this.paymentService.verifyTransactionService(req.params.reference);
+            res.status(resp.status?200:400).json(resp);
+        }
+        catch (e) {
+            LoggerUtils.error(e)
+            res.status(400).json({ message: "Unable to process request" });
+        }
+    }
 }

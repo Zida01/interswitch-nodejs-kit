@@ -18,6 +18,11 @@ POST {{url}}/payment/verify-otp
 Content-Type: application/json
 
 {
-  "reference": "250619120WOIKYMJBCA",
+  "reference": "25062052AALXEQVIK7L",
   "otp": "123456"
 }
+
+
+### Verify Transaction Status
+GET {{url}}/payment/verify-transaction/25061945P280SDPMU8J
+Content-Type: application/json

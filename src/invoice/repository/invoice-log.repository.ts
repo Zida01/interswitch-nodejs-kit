@@ -1,12 +1,12 @@
-import prisma from "../_lib/db/prisma";
-import {LoggerUtils} from "../_lib/logger.utils";
-import {IInvoiceLog} from "./invoice.type";
+import prisma from "../../_lib/db/prisma";
+import {LoggerUtils} from "../../_lib/logger.utils";
+import {ICreateInvoiceLogData} from "../invoice.type";
 
 
 
 export class InvoiceLogRepository {
 
-    createInvoiceLog = async (invLogData:IInvoiceLog) => {
+    createInvoiceLog = async (invLogData:ICreateInvoiceLogData) => {
         try{
             await prisma.invoiceLog.create({
                 data: {
@@ -24,4 +24,5 @@ export class InvoiceLogRepository {
             return false
         }
     }
+
 }

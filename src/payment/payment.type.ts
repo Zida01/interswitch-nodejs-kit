@@ -1,5 +1,7 @@
 
 //expected Response to Payment Controller
+import {PaymentStatus} from "@prisma/client";
+
 export interface IPaymentInitializeResp{
     message:string;
     next_action : string
@@ -38,4 +40,7 @@ export interface IPaymentServiceResp<Req,Resp>{
     next_action : string
     reference:string
     gateway_reference:string
+    payment_status?: PaymentStatus
+    payment_date ?: string | null
 }
+

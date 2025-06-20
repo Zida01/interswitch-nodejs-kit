@@ -10,5 +10,6 @@ const controller = new PaymentController();
 
 paymentRoutes.post("/initiate", validate(initiatePaymentSchema), controller.initiatePayment);
 paymentRoutes.post("/verify-otp", validate(authenticateOtpSchema), controller.otpAuthentication);
+paymentRoutes.get("/verify-transaction/:reference",  controller.verifyTransaction);
 
 export default paymentRoutes;

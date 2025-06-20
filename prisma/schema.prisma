@@ -49,6 +49,7 @@ model Invoice {
   amount  Decimal @default("0.00") @db.Decimal(10, 2)
 
   payment_status PaymentStatus @default(pending)
+  paid_at        String?
 
   gateway_reference String?
 
@@ -76,4 +77,6 @@ model InvoiceLog {
   updated_at DateTime @updatedAt
 
   invoice Invoice? @relation(fields: [reference], references: [reference])
+
+  @@map("invoice_logs")
 }
