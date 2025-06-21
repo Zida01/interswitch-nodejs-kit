@@ -10,7 +10,7 @@ export class InterSwitchBankTransferService {
     "https://qa.interswitchng.com/quicktellerservice/api/v5/configuration/fundstransferbanks";
   private nameEnquiryUrl =
     "https://qa.interswitchng.com/quicktellerservice/api/v5/Transactions/DoAccountNameInquiry";
-  private TerminalId = "3PBL0001";
+  private TerminalId = "3PBL0001";// test terminal Id
 
   constructor() {
     this.TranferServices = new InterSwitchCardService();
