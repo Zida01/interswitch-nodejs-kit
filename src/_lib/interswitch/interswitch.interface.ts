@@ -15,3 +15,7 @@ export interface InitializeCardPaymentReq{
     authData:string
     transactionRef: string
 }
+export interface nameEnquiryReq{
+    accountNumber: number
+    bankCode:number
+}
