@@ -3,7 +3,7 @@ import {IResponse, ResponseUtils} from "../_lib/response.utils";
 import {LoggerUtils} from "../_lib/logger.utils";
 import {InterSwitchCardService} from "../_lib/interswitch/services/interswitch-card.service";
 import {GeneralUtils} from "../_lib/general.utils";
-import {IPaymentInitializeResp} from "./payment.type";
+import {IPaymentInitializeResp, IPaymentVerifyResp} from "./payment.type";
 import {AuthenticateOtpDto} from "./dto/authenticate-otp.dto";
 import {InvoiceRepository} from "../invoice/repository/invoice.repository";
 import {Invoice} from "@prisma/client";
@@ -29,6 +29,14 @@ export class PaymentService {
         try {
             const reference = GeneralUtils.generateReference();
 
+            const inv  = await this.invoiceRepository.createInvoice({
+                reference,
+                email: reqBody.email,
+                channel: 'card',
+                amount: reqBody.amount,
+                payment_status: 'pending',
+            })
+
             const initializeResp = await this.interSwitchCardService.initializeService({
                 email: reqBody.email,
                 amount: reqBody.amount,
@@ -40,16 +48,18 @@ export class PaymentService {
                 expireYear: reqBody.expireYear,
             })
 
+            if( initializeResp.data && initializeResp.data.next_action === 'confirm_status'){
+                const gateway_reference = initializeResp.data.gateway_reference
 
-            //Create Invoice and it logs
-            await this.invoiceRepository.createInvoice({
-                reference,
-                email: reqBody.email,
-                channel: 'card',
-                amount: reqBody.amount,
-                payment_status: initializeResp.status ? 'pending' : 'failed',
-                gateway_reference: initializeResp.data?.gateway_reference
-            })
+                await this.invoiceRepository.updateInvoice(reference,{gateway_reference})
+
+                const invResp = await this.verifyTransactionService(reference,inv)
+
+                if (invResp.status && invResp.data?.payment_status==='paid') {
+                    return ResponseUtils.handleResponse(true, "Transaction Process successfully", null)
+                }
+            }
+
             await this.invoiceLogRepository.createInvoiceLog({
                 reference,
                 req_payload: initializeResp.data?.reqBody,
@@ -58,14 +68,12 @@ export class PaymentService {
                 action_type: initializeResp.data?.next_action as string
             })
 
-
             return ResponseUtils.handleResponse(initializeResp.status,
                 initializeResp.message, {
                     reference,
                     message: initializeResp.data?.message ?? '',
                     next_action: initializeResp.data?.next_action ?? '',
                 });
-
 
         } catch (err) {
             LoggerUtils.error(err)
@@ -110,13 +118,12 @@ export class PaymentService {
         }
     }
 
-
     /**
      * @description verify transaction service
      * @param reference
      * @param invoice
      */
-    verifyTransactionService = async (reference:string,invoice?:Invoice|null): Promise<IResponse<any>> => {
+    verifyTransactionService = async (reference:string,invoice?:Invoice|null): Promise<IResponse<IPaymentVerifyResp|null>> => {
         try {
 
             if(!invoice){
@@ -149,6 +156,7 @@ export class PaymentService {
             return ResponseUtils.handleResponse(true, "Transaction verified successfully", {
                 reference,
                 payment_status: transVerifyResp.data?.payment_status ?? invoice.payment_status,
+                paid_at: transVerifyResp.data?.payment_date ?? null
             });
 
         } catch (err) {

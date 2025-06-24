@@ -26,7 +26,7 @@ export interface IPaymentInitializeServiceResp<Req,Resp>{
     reqBody: Req,
     respData:Resp
     message:string;
-    next_action : string
+    next_action : 'confirm_status' | 'otp' | 'redirect' | 'unknown'
     reference:string
     gateway_reference:string
 }
@@ -44,3 +44,9 @@ export interface IPaymentServiceResp<Req,Resp>{
     payment_date ?: string | null
 }
 
+export interface IPaymentVerifyResp{
+    payment_status:PaymentStatus;
+    // next_action: string
+    reference:string
+    paid_at:string | null
+}

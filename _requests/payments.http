@@ -6,10 +6,10 @@ Content-Type: application/json
   "channel": "card",
   "amount": "5000",
   "email": "test@gmail.com",
-  "pan": "6280511000000095",
+  "pan": "5060990580000217499",
   "pin": "1111",
   "cvv2": "111",
-  "expireMonth": "04",
+  "expireMonth": "03",
   "expireYear": "50"
 }
 
@@ -18,7 +18,7 @@ POST {{url}}/payment/verify-otp
 Content-Type: application/json
 
 {
-  "reference": "25062052AALXEQVIK7L",
+  "reference": "25062358044FZCUXRW9G",
   "otp": "123456"
 }
 

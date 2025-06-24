@@ -16,7 +16,7 @@ export interface ICardMakePaymentResp {
     bankCode: string
     message: string
     amount: string
-    responseCode: string //00, TO, SO,
+    responseCode: "00" | "TO"| "S0"
     plainTextSupportMessage: string
 }
 

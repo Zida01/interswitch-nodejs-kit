@@ -105,7 +105,7 @@ export class InterSwitchCardService {
                     reference: paymentData.reference,
                     gateway_reference: respData.paymentId,
                     message: respData.plainTextSupportMessage ?? respData.message,
-                    next_action: respData.responseCode === '00' ? 'confirm_status' : 'otp',
+                    next_action: respData.responseCode === '00' ? 'confirm_status' : (respData.responseCode==='TO' ? 'otp': respData.responseCode=== 'S0' ? 'redirect':'unknown'),
                     reqBody: reqData,
                     respData: respData
                 }
